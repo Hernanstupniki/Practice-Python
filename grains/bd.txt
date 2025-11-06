@@ -1,0 +1,291 @@
+ya esta en 1fn
+
+pasando a 2fn:
+    isbn - pk
+
+    crear tablas separadas:
+        estudiante
+            id_estudiante/nombre_estudiante (id_estudiante - pk)
+        libro
+            isbn/titulo/autor_nombre/autor_nacionalidad/anio_publicacion/editorial/tematica/genero (isbn - pk)
+        prestamo
+        id_prestamo/isbn/id_estudiante/fecha_prestamo (id_prestamo - pk, isbn - fk, id_estudiante - fk)
+
+Verificar BCNF
+
+Revisamos dependencias funcionales:
+
+isbn → título, autor, editorial... ✅ el determinante es clave (isbn)
+
+id_estudiante → nombre_estudiante ✅ el determinante es clave
+
+id_prestamo → isbn, id_estudiante, fecha_prestamo ✅ el determinante es clave
+
+
+---
+
+## 🧩 **1. Dependencia funcional**
+
+📖 **Definición:**
+Existe una **dependencia funcional (DF)** entre dos conjuntos de atributos, si un atributo (o conjunto de ellos) **determina** el valor de otro.
+
+🧠 Se escribe:
+
+```
+A → B
+```
+
+y significa que **si conozco A, puedo saber B**.
+
+📘 **Ejemplo:**
+En una tabla de libros:
+
+```
+isbn → título, autor
+```
+
+porque cada `isbn` identifica **un solo** título y autor.
+
+---
+
+## 🧱 **2. Determinante**
+
+📖 **Definición:**
+El **determinante** es el atributo (o conjunto de atributos) que aparece en el lado izquierdo de una dependencia funcional.
+
+📘 **Ejemplo:**
+En `dni → nombre, dirección`, el **determinante es `dni`**, porque con él determino los otros valores.
+
+---
+
+## 🗝️ **3. Clave primaria (PK)**
+
+📖 **Definición:**
+Es el conjunto mínimo de atributos que **identifica de forma única** cada fila en una tabla.
+No puede haber dos filas con el mismo valor de PK.
+
+📘 **Ejemplo:**
+En la tabla de alumnos:
+
+```
+id_estudiante | nombre
+1              | Juan
+2              | Ana
+```
+
+La clave primaria es **id_estudiante**.
+
+---
+
+## 🧩 **4. Clave candidata**
+
+📖 **Definición:**
+Es **una posible clave primaria**: cualquier conjunto mínimo de atributos que identifica de forma única una fila.
+
+📘 **Ejemplo:**
+En una tabla de personas:
+
+```
+dni | email | nombre
+```
+
+Tanto `dni` como `email` podrían ser **claves candidatas** (cada uno identifica de forma única).
+Elegís uno como **clave primaria**, el otro queda como **clave alternativa**.
+
+---
+
+## 📘 **5. Primera Forma Normal (1FN)**
+
+📖 **Definición:**
+Una tabla está en **1FN** cuando **todas las celdas tienen valores atómicos**, es decir, **un solo valor por campo**.
+
+📘 **Ejemplo:**
+❌ No cumple:
+
+| Cliente | Teléfonos        |
+| ------- | ---------------- |
+| Juan    | 1111, 2222, 3333 |
+
+✅ Cumple (en 1FN):
+
+| Cliente | Teléfono |
+| ------- | -------- |
+| Juan    | 1111     |
+| Juan    | 2222     |
+| Juan    | 3333     |
+
+---
+
+## 🧠 **6. Segunda Forma Normal (2FN)**
+
+📖 **Definición:**
+Una tabla está en **2FN** si:
+
+1. Está en 1FN.
+2. **Todos los campos no clave dependen de toda la clave primaria**, no solo de una parte.
+
+📘 **Ejemplo:**
+Tabla (clave compuesta):
+
+| id_pedido | id_producto | nombre_cliente | precio_unitario |
+| --------- | ----------- | -------------- | --------------- |
+
+👉 `nombre_cliente` depende solo de `id_pedido`, no de la clave completa (`id_pedido`, `id_producto`).
+❌ No cumple 2FN.
+
+✅ Solución: separar en:
+
+* **Pedido(id_pedido, nombre_cliente)**
+* **Detalle(id_pedido, id_producto, precio_unitario)**
+
+---
+
+## 🧱 **7. Tercera Forma Normal (3FN)**
+
+📖 **Definición:**
+Una tabla está en **3FN** si:
+
+1. Está en 2FN.
+2. **No existen dependencias transitivas**, o sea, un campo no clave no depende de otro campo no clave.
+
+📘 **Ejemplo:**
+
+| id_cliente | nombre_cliente | ciudad | cod_postal |
+| ---------- | -------------- | ------ | ---------- |
+
+Si `cod_postal → ciudad`, entonces `id_cliente → cod_postal → ciudad`
+❌ Hay dependencia transitiva.
+
+✅ Solución: separar:
+
+* **Cliente(id_cliente, nombre_cliente, cod_postal)**
+* **CodigoPostal(cod_postal, ciudad)**
+
+---
+
+## 🧩 **8. Forma Normal Boyce-Codd (BCNF)**
+
+📖 **Definición:**
+Una tabla está en **BCNF** si:
+
+> Para toda dependencia funcional X → Y,
+> el determinante X es una **clave candidata**.
+
+👉 Es como una versión más estricta de 3FN.
+
+📘 **Ejemplo:**
+
+| Profesor | Materia | Aula |
+| -------- | ------- | ---- |
+| Pérez    | Redes   | 101  |
+| Gómez    | BD      | 102  |
+
+Dependencias:
+
+* `Profesor → Materia`
+* `Materia → Aula`
+
+✅ 3FN, pero ❌ no BCNF, porque `Materia` no es clave.
+💡 Solución: separar:
+
+* **ProfesorMateria(Profesor, Materia)**
+* **MateriaAula(Materia, Aula)**
+
+---
+
+### 📘 **Definición ampliada (según Boyce-Codd original)**
+
+Una tabla está en **Forma Normal de Boyce-Codd (BCNF)** cuando cumple **ambas condiciones:**
+
+1. 🔹 **Todas las dependencias funcionales deben tener como determinante una clave candidata.**
+   Esto significa que solo las claves pueden determinar otros atributos.
+
+2. 🔹 **Todas las dependencias funcionales deben ser triviales.**
+   Es decir, dependencias del tipo `A → A` o `A → parte de A`,
+   que no agregan información redundante.
+
+📘 **Ejemplo visual (como en la imagen):**
+
+| Profesor | Materia | Aula |
+| -------- | ------- | ---- |
+| Pérez    | Redes   | 101  |
+| Gómez    | BD      | 102  |
+
+Dependencias:
+
+* `Profesor → Materia`
+* `Materia → Aula`
+
+👉 Como `Materia` no es clave, la segunda dependencia **rompe BCNF**.
+✅ Solución: dividir en:
+
+* **ProfesorMateria(Profesor, Materia)**
+* **MateriaAula(Materia, Aula)**
+
+📚 **Resumen:**
+
+> En BCNF, toda dependencia funcional debe provenir de una clave candidata o ser trivial.
+
+---
+
+## 🧮 **9. Dependencia parcial**
+
+📖 **Definición:**
+Ocurre cuando un atributo depende **solo de parte** de una clave compuesta.
+
+📘 **Ejemplo:**
+En `(id_pedido, id_producto) → nombre_cliente`,
+`nombre_cliente` depende solo de `id_pedido`, no de toda la clave.
+
+👉 Se elimina en **2FN**.
+
+---
+
+## 🔁 **10. Dependencia transitiva**
+
+📖 **Definición:**
+Pasa cuando un atributo no clave depende de otro atributo no clave.
+Es una dependencia “en cadena”.
+
+📘 **Ejemplo:**
+
+```
+dni → cod_postal
+cod_postal → ciudad
+```
+
+Entonces `dni → ciudad` (por tránsito).
+👉 Se elimina en **3FN**.
+
+---
+
+## 🧠 **11. Redundancia**
+
+📖 **Definición:**
+Es cuando el mismo dato se repite varias veces en la base de datos, provocando **anomalías** (errores al actualizar, insertar o eliminar).
+
+📘 **Ejemplo:**
+Si el nombre del autor está en todas las filas de libros del mismo autor, hay redundancia.
+
+---
+
+## ⚙️ **12. Anomalías**
+
+📖 **Definición:**
+Problemas que aparecen por mala normalización:
+
+* **Inserción:** no puedo agregar un autor sin un libro.
+* **Actualización:** cambio el nombre de un autor y tengo que hacerlo en 10 filas.
+* **Eliminación:** borro el único libro de un autor y pierdo su información.
+
+---
+
+## 🧠 **Resumen rápido de las formas normales**
+
+| Forma    | Qué elimina                     | Condición principal                  |
+| -------- | ------------------------------- | ------------------------------------ |
+| **1FN**  | Repeticiones / listas en celdas | Atributos atómicos                   |
+| **2FN**  | Dependencias parciales          | Todos dependen de la clave completa  |
+| **3FN**  | Dependencias transitivas        | No hay dependencias entre no-claves  |
+| **BCNF** | Casos especiales de 3FN         | Todo determinante es clave candidata |
+
